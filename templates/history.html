@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shield - History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Background elements -->
+    <div class="background"></div>
+    <div class="particles"></div>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i> URL Shield
+            </div>
+            <ul>
+                <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="/history" class="active"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/#about"><i class="fas fa-info-circle"></i> About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="history-section">
+            <h1><i class="fas fa-history"></i> URL Check History</h1>
+            
+            <div class="history-actions">
+                <form action="/retrain" method="POST" id="retrainForm">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sync"></i> Retrain Model with Feedback
+                    </button>
+                </form>
+            </div>
+            
+            <div class="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Result</th>
+                            <th>Confidence</th>
+                            <th>Date</th>
+                            <th>User Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if history %}
+                            {% for item in history %}
+                            <tr>
+                                <td class="url-cell">{{ item[0] }}</td>
+                                <td class="result-cell {{ 'phishing' if item[1] == 'Phishing' else 'legitimate' }}">
+                                    {% if item[1] == 'Phishing' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% else %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% endif %}
+                                    {{ item[1] }}
+                                </td>
+                                <td>{{ (item[2] * 100)|round(2) }}%</td>
+                                <td>{{ item[3] }}</td>
+                                <td>
+                                    {% if item[4] %}
+                                        <span class="feedback {{ 'phishing' if item[4] == 'Phishing' else 'legitimate' }}">
+                                            {{ item[4] }}
+                                        </span>
+                                    {% else %}
+                                        <span class="no-feedback">No feedback</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="no-data">No history available</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-shield-alt"></i> URL Shield
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/history">History</a>
+                <a href="/#about">About</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 URL Shield - Phishing Detection System
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Particle generation for background effect
+        const particlesContainer = document.querySelector('.particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('span');
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.top = `${Math.random() * 100}vh`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particle.style.width = particle.style.height = `${Math.random() * 5 + 1}px`;
+            particlesContainer.appendChild(particle);
+        }
+        
+        // AJAX for retraining
+        document.getElementById('retrainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const button = this.querySelector('button');
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retraining...';
+            button.disabled = true;
+            
+            fetch('/retrain', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                button.innerHTML = '<i class="fas fa-sync"></i> Retrain Model with Feedback';
+                button.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during retraining.');
+                button.innerHTML = '<i class="fas fa-sync"></i> Retrain Model with Feedback';
+                button.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shield - Phishing Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Background elements -->
+    <div class="background"></div>
+    <div class="particles"></div>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i> URL Shield
+            </div>
+            <ul>
+                <li><a href="/" class="active"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1><i class="fas fa-shield-alt"></i> URL Shield</h1>
+            <p class="tagline">Protect yourself from phishing attacks with our advanced detection system</p>
+            
+            <div class="search-box">
+                <form method="POST" class="form">
+                    <div class="input-group">
+                        <i class="fas fa-link input-icon"></i>
+                        <input type="text" id="url" name="url" required 
+                               placeholder="Enter a website URL to check..." 
+                               value="{{ url if url else '' }}">
+                    </div>
+                    <button type="submit" class="analyze-btn">
+                        <i class="fas fa-search"></i> Analyze
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if session.get('feedback_submitted') %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> Thank you for your feedback! It helps improve our system.
+        </div>
+        {% endif %}
+
+        {% if result %}
+        <section class="result-section">
+            <div class="result-card {{ 'phishing' if result == 'Phishing' else 'legitimate' }}">
+                <div class="result-header">
+                    <h2>
+                        {% if result == 'Phishing' %}
+                            <i class="fas fa-exclamation-triangle"></i> Phishing Alert
+                        {% else %}
+                            <i class="fas fa-check-circle"></i> Legitimate Website
+                        {% endif %}
+                    </h2>
+                    <div class="confidence-meter">
+                        <div class="meter">
+                            <div class="meter-fill" style="width: {{ confidence }}%;"></div>
+                        </div>
+                        <span class="confidence-text">{{ confidence }}% confidence</span>
+                    </div>
+                </div>
+                
+                <div class="result-body">
+                    <div class="url-display">
+                        <span class="url-label">URL:</span>
+                        <span class="url-value">{{ url }}</span>
+                    </div>
+                    
+                    {% if risk_factors %}
+                    <div class="risk-factors">
+                        <h3><i class="fas fa-exclamation-circle"></i> Risk Factors Detected</h3>
+                        <ul>
+                            {% for factor in risk_factors %}
+                            <li><i class="fas fa-angle-right"></i> {{ factor }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="feedback-section">
+                        <h3>Was this analysis correct?</h3>
+                        <form action="/report" method="POST" class="feedback-form">
+                            <button type="submit" name="feedback" value="Phishing" class="btn btn-danger">
+                                <i class="fas fa-thumbs-down"></i> No, this is phishing
+                            </button>
+                            <button type="submit" name="feedback" value="Legitimate" class="btn btn-success">
+                                <i class="fas fa-thumbs-up"></i> No, this is legitimate
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if recent_checks %}
+        <section class="recent-section">
+            <h2><i class="fas fa-clock"></i> Recent Checks</h2>
+            <div class="recent-checks">
+                {% for check in recent_checks %}
+                <div class="check-item">
+                    <span class="check-url">{{ check[0][:40] }}{{ '...' if check[0]|length > 40 else '' }}</span>
+                    <span class="check-result {{ 'phishing' if check[1] == 'Phishing' else 'legitimate' }}">
+                        {% if check[1] == 'Phishing' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                        {{ check[1] }}
+                    </span>
+                    <span class="check-date">{{ check[3] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section id="about" class="about-section">
+            <h2><i class="fas fa-info-circle"></i> About URL Shield</h2>
+            <div class="about-content">
+                <p>URL Shield uses advanced machine learning algorithms to detect phishing websites. Our system analyzes various features of URLs to determine if they are legitimate or potentially harmful.</p>
+                <p>Key features we analyze include:</p>
+                <ul>
+                    <li>Domain characteristics and age</li>
+                    <li>URL structure and length</li>
+                    <li>Presence of suspicious elements</li>
+                    <li>SSL certificate validity</li>
+                    <li>Content similarity to known legitimate sites</li>
+                </ul>
+                <p>Your feedback helps our system get better over time. Thank you for using URL Shield to stay safe online!</p>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-shield-alt"></i> URL Shield
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/history">History</a>
+                <a href="#about">About</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 URL Shield - Phishing Detection System
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Particle generation for background effect
+        const particlesContainer = document.querySelector('.particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('span');
+            particle.style.left = `${Math.random() * 100}vw`;
+            particle.style.top = `${Math.random() * 100}vh`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particle.style.width = particle.style.height = `${Math.random() * 5 + 1}px`;
+            particlesContainer.appendChild(particle);
+        }
+        
+        // Clear session feedback message after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
