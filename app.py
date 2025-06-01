@@ -17,7 +17,21 @@ if not os.path.exists('phishing_history.db'):
 # Load model
 try:
     model = joblib.load("model.pkl")
+    
+    # Check if the model is compatible with our current feature set
+    # We'll do this by extracting features from a simple test URL
+    # and checking if the feature count matches what the model expects
+    test_features = extract_features("https://example.com")
+    try:
+        # Try to predict with the model to see if features match
+        model.predict([test_features])
+    except Exception as e:
+        print(f"Loaded model is incompatible with current feature set: {e}")
+        print("Retraining model with current feature set...")
+        from model_training import train_model
+        model = train_model()
 except FileNotFoundError:
+    print("Model not found, training a new one...")
     from model_training import train_model
     model = train_model()
 
