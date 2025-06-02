@@ -69,8 +69,15 @@ def index():
             prediction = model.predict([features])[0]
             probability = model.predict_proba([features])[0]
             
+            # Handle the prediction and probability safely
             result = "Phishing" if prediction == 1 else "Legitimate"
-            confidence = probability[1] if prediction == 1 else probability[0]
+            
+            # Safely access probability array - check its length first
+            if len(probability) > 1:
+                confidence = probability[1] if prediction == 1 else probability[0]
+            else:
+                # If only one probability value, use it directly
+                confidence = probability[0]
             confidence_percent = round(confidence * 100, 2)
             
             # Get risk factors
@@ -119,13 +126,24 @@ def report():
     # Save feedback to database
     conn = sqlite3.connect('phishing_history.db')
     cursor = conn.cursor()
+    
+    # First find the most recent check for this URL and prediction
     cursor.execute("""
-        UPDATE url_checks 
-        SET user_feedback = ? 
+        SELECT id FROM url_checks 
         WHERE url = ? AND prediction = ? 
         ORDER BY check_date DESC LIMIT 1
-    """, (feedback, url, prediction))
-    conn.commit()
+    """, (url, prediction))
+    
+    row = cursor.fetchone()
+    if row:
+        # Update the specific record by ID
+        cursor.execute("""
+            UPDATE url_checks 
+            SET user_feedback = ? 
+            WHERE id = ?
+        """, (feedback, row[0]))
+        conn.commit()
+    
     conn.close()
     
     # Flash a thank you message
@@ -184,7 +202,13 @@ def api_analyze():
         probability = model.predict_proba([features])[0]
         
         result = "Phishing" if prediction == 1 else "Legitimate"
-        confidence = probability[1] if prediction == 1 else probability[0]
+        
+        # Safely access probability array - check its length first
+        if len(probability) > 1:
+            confidence = probability[1] if prediction == 1 else probability[0]
+        else:
+            # If only one probability value, use it directly
+            confidence = probability[0]
         
         # Get risk factors
         risk_factors = get_url_risk_factors(url)
